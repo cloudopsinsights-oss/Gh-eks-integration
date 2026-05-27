@@ -74,17 +74,17 @@ Ex: eksctl create cluster --name demo --region ap-south-1 --version 1.34 --nodeg
  aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com \
  --client-id-list sts.amazonaws.com --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
 
-**Step 3 — Create IAM Policy for EKS Access**:
-**Step 4 — Create IAM Role for GitHub Actions**:
-**Step 5 — Map IAM Role to EKS RBAC**:
+**Step 3 — Create IAM Policy for EKS Access**: \
+**Step 4 — Create IAM Role for GitHub Actions**: \
+**Step 5 — Map IAM Role to EKS RBAC**: \
   AWS IAM authentication alone is NOT enough. \
   EKS must authorize this IAM role inside Kubernetes. \
-  kubectl edit configmap aws-auth -n kube-system and add below lines
+  kubectl edit configmap aws-auth -n kube-system and add below lines \
   
-  mapRoles: | \
+  mapRoles: | 
   - rolearn: arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsEKSRole \
-    username: github-actions \
-    groups: \
+    username: github-actions 
+    groups: 
       - system:masters
 
 **Note: system:masters gives admin access. For production, use limited RBAC roles instead.**
