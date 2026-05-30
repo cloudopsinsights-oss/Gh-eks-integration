@@ -55,6 +55,6 @@ jobs:
         run: |
           sed -i "s|IMAGE_PLACEHOLDER|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" deployment.yaml
 
-          kubectl apply -f deployment.yml
+          kubectl apply -f deployment.yaml
 
           kubectl rollout status deployment/gh-eks-app
