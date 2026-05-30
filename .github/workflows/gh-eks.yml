@@ -8,6 +8,10 @@ on:
 permissions:
   id-token: write
   contents: read
+env:
+  AWS_REGION: ap-south-2
+  EKS_CLUSTER_NAME: demo
+  ECR_REPOSITORY: gh-eks-integration
 
 jobs:
   deploy:
@@ -23,6 +27,18 @@ jobs:
           role-to-assume: arn:aws:iam::125814690975:role/gh-eks-demo-role
           aws-region: ap-south-2
 
+        - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
       - name: Verify AWS Identity
         run: aws sts get-caller-identity
 
@@ -32,6 +48,13 @@ jobs:
             --region ap-south-2 \
             --name demo
 
-      - name: Verify EKS Access
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          kubectl get nodes
+          sed -i "s|IMAGE_PLACEHOLDER|$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|g" k8s/deployment.yaml
+
+          kubectl apply -f k8s/deployment.yml
+
+          kubectl rollout status deployment/gh-eks-app
